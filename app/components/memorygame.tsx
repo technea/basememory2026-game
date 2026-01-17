@@ -7,6 +7,8 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useAccount } from "wagmi";
+import sdk from "@farcaster/miniapp-sdk";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 
 /**
@@ -111,8 +113,8 @@ const BaseMemoryGame: React.FC = () => {
   const [hints, setHints] = useState<number>(() => safeGetNumber("base_hints", 3));
   const [quizzesSolved, setQuizzesSolved] = useState<number>(() => safeGetNumber("base_quizzes", 0));
 
-  // MiniKit integration
-  const { executeTransaction, connect, isConnected, address } = useMiniKit();
+  // Wallet connection from wagmi
+  const { address, isConnected } = useAccount();
 
   // Game states
   const [showQuiz, setShowQuiz] = useState(false);
@@ -298,34 +300,26 @@ const BaseMemoryGame: React.FC = () => {
     }
   };
 
-  // MiniKit Transaction Handler
+  // MiniKit Transaction Handler - FIXED: use MiniKit.actions.sendTransaction
   const handleTransaction = async () => {
     try {
       setTransactionStatus('loading');
-      
-      if (!isConnected) {
-        await connect();
-      }
 
       // Create a small transaction (0.0001 ETH to a test address)
-      const transaction = {
-        to: "0x0000000000000000000000000000000000000000", // Replace with your address
-        value: "100000000000000", // 0.0001 ETH in wei
-        data: "0x", // No data
-      };
-
-      const result = await executeTransaction({
-        transaction,
-        chain: "base",
+      const result = await sdk.actions.sendTransaction({
+        chainId: 8453, // Base mainnet
+        to: '0x0000000000000000000000000000000000000000', // Replace with your address
+        value: '0x9184e72a', // 0.0001 ETH in hex
+        data: '0x', // No data
       });
 
       if (result && result.transactionHash) {
         setTransactionHash(result.transactionHash);
         setTransactionStatus('success');
-        
+
         // Add bonus score for completing transaction
         setScore((s) => s + 1000);
-        
+
         // Move to next level after 2 seconds
         setTimeout(() => {
           proceedToNextLevel();
