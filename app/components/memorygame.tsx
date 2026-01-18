@@ -9,7 +9,6 @@ import React, {
 } from "react";
 import { useAccount } from "wagmi";
 import sdk from "@farcaster/miniapp-sdk";
-import { useMiniKit } from "@coinbase/onchainkit/minikit";
 
 /**
  * Fixed BaseMemoryGame component with MiniKit transaction after each level
@@ -114,10 +113,7 @@ const BaseMemoryGame: React.FC = () => {
   const [quizzesSolved, setQuizzesSolved] = useState<number>(() => safeGetNumber("base_quizzes", 0));
 
   // Wallet connection from wagmi
-  const { address, isConnected } = useAccount();
-
-  // MiniKit integration - removed executeTransaction since it doesn't exist
-  const { connect } = useMiniKit();
+  const { address, isConnected, connector } = useAccount();
 
   // Game states
   const [showQuiz, setShowQuiz] = useState(false);
@@ -303,7 +299,7 @@ const BaseMemoryGame: React.FC = () => {
     }
   };
 
-  // MiniKit Transaction Handler - Fixed: Use sdk.actions.sendTransaction directly
+  // MiniKit Transaction Handler - Using Farcaster SDK directly
   const handleTransaction = async () => {
     try {
       setTransactionStatus('loading');
@@ -338,7 +334,10 @@ const BaseMemoryGame: React.FC = () => {
 
   const handleConnect = async () => {
     try {
-      await connect();
+      // Connect wallet using wagmi connector
+      if (connector) {
+        await connector.connect();
+      }
     } catch (error) {
       console.error("Failed to connect:", error);
     }
