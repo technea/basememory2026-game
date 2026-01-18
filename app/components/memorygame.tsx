@@ -116,6 +116,9 @@ const BaseMemoryGame: React.FC = () => {
   // Wallet connection from wagmi
   const { address, isConnected } = useAccount();
 
+  // MiniKit integration - removed executeTransaction since it doesn't exist
+  const { connect } = useMiniKit();
+
   // Game states
   const [showQuiz, setShowQuiz] = useState(false);
   const [showLesson, setShowLesson] = useState(false);
@@ -300,7 +303,7 @@ const BaseMemoryGame: React.FC = () => {
     }
   };
 
-  // MiniKit Transaction Handler - FIXED: use MiniKit.actions.sendTransaction
+  // MiniKit Transaction Handler - Fixed: Use sdk.actions.sendTransaction directly
   const handleTransaction = async () => {
     try {
       setTransactionStatus('loading');
@@ -330,6 +333,14 @@ const BaseMemoryGame: React.FC = () => {
     } catch (error) {
       console.error("Transaction error:", error);
       setTransactionStatus('error');
+    }
+  };
+
+  const handleConnect = async () => {
+    try {
+      await connect();
+    } catch (error) {
+      console.error("Failed to connect:", error);
     }
   };
 
@@ -599,7 +610,7 @@ const BaseMemoryGame: React.FC = () => {
 
                   <div className="space-y-3">
                     <button
-                      onClick={handleTransaction}
+                      onClick={!isConnected ? handleConnect : handleTransaction}
                       disabled={transactionStatus === 'loading'}
                       className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
                     >
